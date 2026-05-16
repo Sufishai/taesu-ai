@@ -55,6 +55,26 @@ function isWakeWord(text) {
 
   return keywords.some(word => text.includes(word));
 }
+
+function isSleepWord(text) {
+  const sleepWords = [
+    "ok done",
+    "okay done",
+    "goodbye",
+    "bye",
+    "stop",
+    "sleep",
+    "go idle",
+    "that's all",
+    "ok were done",
+    "okay were done",
+    "taesu stop",
+    "taesu sleep",
+    "taesu go idle"
+  ];
+
+  return sleepWords.some(word => text.includes(word));
+}
 /* speech recognition */
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -83,14 +103,32 @@ recognition.lang = "en-US";
 // };
 
 recognition.onresult = (event) => {
+
   const text =
-    event.results[event.results.length - 1][0].transcript.toLowerCase();
+    event.results[event.results.length - 1][0]
+      .transcript
+      .toLowerCase()
+      .trim();
 
-  console.log(" Heard:", text);
+  console.log("Heard:", text);
 
-  if (isWakeWord(text)) {
-    console.log("Wake word detected");
-    enterActiveMode();
+  if (currentState === STATE.IDLE) {
+
+    if (isWakeWord(text)) {
+      enterActiveMode();
+    }
+
+    return;
+  }
+
+  if (isSleepWord(text)) {
+
+    speakText("Alright. Returning to idle mode.");
+
+    setTimeout(() => {
+      goIdle();
+    }, 1500);
+
     return;
   }
 
@@ -99,14 +137,7 @@ recognition.onresult = (event) => {
   }
 };
 recognition.onend = () => recognition.start();
-function startListening() {
-    try {
-  recognition.start();
-  console.log("Manual start triggered");
-  } catch (e) {
-    console.log("Already started");
-  }
-}
+
 recognition.onstart = () => {
   console.log(" Mic started listening...");
 };
@@ -272,6 +303,7 @@ function speakText(text) {
   utter.voice = selectedVoice;
 
   utter.onstart = () => {
+    recognition.stop();
     startTalkingAnimation();
   };
 
@@ -280,6 +312,7 @@ function speakText(text) {
     currentState = STATE.ACTIVE;
     face.src = "assets/idle.png";
     lastInteractionTime = Date.now();
+    recognition.start();
   };
 
   speechSynthesis.speak(utter);
@@ -363,3 +396,4 @@ function goIdle() {
   face.src = "assets/idle.png";
   console.log("Taeiya idle mode");
 }
+recognition.start();
