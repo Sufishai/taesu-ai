@@ -1,0 +1,12 @@
+bbody {
+  margin: 0;
+  background: black;
+  overflow: hidden;
+}
+
+.npc-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
