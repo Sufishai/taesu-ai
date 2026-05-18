@@ -171,29 +171,29 @@ function handleUserSpeech(text) {
 }
 
 /* backend */
-// async function sendMessage(text) {
-//   currentState = STATE.THINKING;
-//   face.src = "assets/idle.png";
-
-//   try {
-//     const res = await fetch("http://127.0.0.1:8000/chat", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ message: text })
-//     });
-
-//     const data = await res.json();
-//     console.log("RESPONSE:", data); 
-//     speakResponse(data);
-
-//   } catch (err) {
-//     console.error(err);
-//     speakText("Something went wrong.");
-//   }
-// }
 async function sendMessage(text) {
   currentState = STATE.THINKING;
+  face.src = "assets/idle.png";
+
+  try {
+    const res = await fetch("http://127.0.0.1:8000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+    console.log("RESPONSE:", data); 
+    speakResponse(data);
+
+  } catch (err) {
+    console.error(err);
+    speakText("Something went wrong.");
+  }
 }
+// async function sendMessage(text) {
+//   currentState = STATE.THINKING;
+// }
 
 speechSynthesis.onvoiceschanged = () => {
   const voices = speechSynthesis.getVoices();
