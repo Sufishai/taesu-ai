@@ -53,7 +53,7 @@ let talkInterval;
 
 // }
 function isWakeWord(text) {
-  const keywords = [ "taesu", "tesu", "teisu", "tasu", "hatisu", "hetesu", "taesoo", "hey taesu","hi taesu","hi taisu", "hey teisu", "hey tasu", "hey hatisu", "hey hetesu"];
+  const keywords = [ "tae", "taesu", "tesu", "teisu", "tasu", "hatisu", "hetesu", "taesoo", "hey taesu","hi taesu","hi taisu", "hey teisu", "hey tasu", "hey hatisu", "hey hetesu"];
 
   return keywords.some(word => text.includes(word));
 }
