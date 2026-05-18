@@ -8,19 +8,21 @@ let currentEmotion = "neutral";
 
 // voice loading
 let selectedVoice = null;
+let recognitionStarted = false;
 
 speechSynthesis.onvoiceschanged = () => {
-const voices = speechSynthesis.getVoices();
+  const voices = speechSynthesis.getVoices();
 
-const selectedVoice =
-  voices.find(v => v.name.includes("David")) ||
-  voices.find(v => v.name.includes("Mark")) ||
-  voices.find(v => v.name.includes("Male")) ||
-  voices.find(v => v.lang === "en-US") ||
-  voices[0];
+  selectedVoice =
+    voices.find(v => v.name.includes("David")) ||
+    voices.find(v => v.name.includes("Mark")) ||
+    voices.find(v => v.name.includes("Male")) ||
+    voices.find(v => v.lang === "en-US") ||
+    voices[0];
 
-utter.voice = selectedVoice;
+  console.log("Using voice:", selectedVoice ? selectedVoice.name : "default");
 };
+
 /* state */ 
 const STATE = {
   IDLE: "idle",
@@ -51,7 +53,7 @@ let talkInterval;
 
 // }
 function isWakeWord(text) {
-  const keywords = ["hi", "hey", "taesu", "tesu", "teisu", "tasu", "hatisu", "hetesu", "taesoo", "hey taesu", "hey teisu", "hey tasu", "hey hatisu", "hey hetesu"];
+  const keywords = [ "taesu", "tesu", "teisu", "tasu", "hatisu", "hetesu", "taesoo", "hey taesu","hi taesu","hi taisu", "hey teisu", "hey tasu", "hey hatisu", "hey hetesu"];
 
   return keywords.some(word => text.includes(word));
 }
@@ -287,45 +289,87 @@ function addNaturalPauses(text) {
       .replace(/\./g, "... ")
       .replace(/,/g, ", ");
 }
-function speakText(text) {
+let selectedVoice = null;
+let recognitionStarted = false;
 
-  const utter = new SpeechSynthesisUtterance(text);
-
+speechSynthesis.onvoiceschanged = () => {
   const voices = speechSynthesis.getVoices();
 
-  const selectedVoice =
+  selectedVoice =
     voices.find(v => v.name.includes("David")) ||
     voices.find(v => v.name.includes("Mark")) ||
     voices.find(v => v.name.includes("Male")) ||
     voices.find(v => v.lang === "en-US") ||
     voices[0];
 
-  utter.voice = selectedVoice;
+  console.log("Using voice:", selectedVoice ? selectedVoice.name : "default");
+};
 
-  utter.onstart = () => {
-    recognition.stop();
-    startTalkingAnimation();
-  };
+function safeStartRecognition() {
+  if (recognitionStarted) return;
 
-  utter.onend = () => {
-    stopTalkingAnimation();
-    currentState = STATE.ACTIVE;
-    face.src = "assets/idle.png";
-    lastInteractionTime = Date.now();
+  try {
     recognition.start();
-  };
+    recognitionStarted = true;
+  } catch (e) {
+    console.log("Recognition already running");
+  }
+}
 
-  speechSynthesis.speak(utter);
+function safeStopRecognition() {
+  if (!recognitionStarted) return;
 
+  try {
+    recognition.stop();
+    recognitionStarted = false;
+  } catch (e) {
+    console.log("Recognition already stopped");
+  }
+}
+
+recognition.onend = () => {
+  recognitionStarted = false;
+
+  if (currentState !== STATE.SPEAKING) {
+    safeStartRecognition();
+  }
+};
+
+recognition.onstart = () => {
+  recognitionStarted = true;
+  console.log("Mic started listening...");
+};
+
+function speakResponse(data) {
+  if (!data || !data.response) return;
+
+  currentEmotion = data.emotion || "neutral";
+  speakText(data.response);
+}
+
+function addNaturalPauses(text) {
+  return text
+    .replace(/\./g, "... ")
+    .replace(/,/g, ", ");
+}
+
+function speakText(text) {
+  currentState = STATE.SPEAKING;
+
+  speechSynthesis.cancel();
 
   text = addNaturalPauses(text);
 
-// Voice tuning
-  switch (currentEmotion) {
+  const utter = new SpeechSynthesisUtterance(text);
 
+  if (selectedVoice) {
+    utter.voice = selectedVoice;
+  }
+
+  switch (currentEmotion) {
     case "happy":
       utter.rate = 1.05;
-      utter.pitch = 1.1;
+      utter.pitch = 1.05;
       break;
 
     case "sad":
@@ -335,7 +379,7 @@ function speakText(text) {
 
     case "thinking":
       utter.rate = 0.9;
-      utter.pitch = 0.95;
+      utter.pitch = 0.9;
       break;
 
     case "calm":
@@ -343,14 +387,13 @@ function speakText(text) {
       utter.pitch = 0.85;
       break;
 
-    default: 
-      
-     utter.rate = 0.93;
-     utter.pitch = 0.82;
-
+    default:
+      utter.rate = 0.93;
+      utter.pitch = 0.82;
   }
-}
+
   utter.onstart = () => {
+    safeStopRecognition();
     startTalkingAnimation();
   };
 
@@ -359,13 +402,11 @@ function speakText(text) {
     currentState = STATE.ACTIVE;
     face.src = "assets/idle.png";
     lastInteractionTime = Date.now();
+    safeStartRecognition();
   };
 
   speechSynthesis.speak(utter);
-  speechSynthesis.onvoiceschanged = () => {
-  speechSynthesis.getVoices();
-};
-
+}
 /* animation */
 function startTalkingAnimation() {
   stopTalkingAnimation();
