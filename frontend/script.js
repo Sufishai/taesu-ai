@@ -113,7 +113,8 @@ recognition.onresult = (event) => {
       .trim();
 
   console.log("Heard:", text);
-
+  console.log("Current State:", currentState);
+  
   if (currentState === STATE.IDLE) {
 
     if (isWakeWord(text)) {

@@ -88,7 +88,7 @@ Rules:
                     *chat_memory[-5:]
                 ]
             )
-
+            print("_____________________________________-RAW RESPONSE: ____________________________________________________________\n", response)
             if not response.choices:
                 reply = "Hmm… I'm having trouble thinking right now."
             else:
