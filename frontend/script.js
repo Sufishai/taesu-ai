@@ -192,104 +192,8 @@ function handleUserSpeech(text) {
 // }
 async function sendMessage(text) {
   currentState = STATE.THINKING;
-  face.src = "assets/idle.png";
-
-  try {
-    console.log("Sending:", text);
-
-    const res = await fetch("http://127.0.0.1:8000/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-
-    console.log("Status:", res.status);
-
-    if (!res.ok) {
-      throw new Error("Server error: " + res.status);
-    }
-
-    let data;
-
-    try {
-      data = await res.json();
-    } catch (e) {
-      console.warn("JSON parse failed");
-      data = {
-        response: "Fallback response",
-        emotion: "neutral"
-      };
-    }
-
-    console.log("Parsed Response:", data);
-
-    speakResponse(data);
-
-  } catch (err) {
-    console.error("Error:", err);
-
-    if (currentState !== STATE.SPEAKING) {
-      speakText("Something went wrong.");
-    }
-  }
 }
-
-/* speaking with animation */
-// function speakResponse(data) {
-//   currentState = STATE.SPEAKING;
-
-//   let emotion = data.emotion || "neutral";
-
-//   if (emotion === "angry") emotion = "neutral";
-
-//   const audio = new Audio(data.voice);
-
-//   startTalkingAnimation();
-//   audio.play();
-
-//   audio.onended = () => {
-//     stopTalkingAnimation();
-//     currentState = STATE.ACTIVE;
-//     face.src = "assets/idle.png";
-//     lastInteractionTime = Date.now();
-//   };
-// }
-function speakResponse(data) {
-  if (!data.voice && !data.response) return;
-
-  if (data.voice) {
-    const audio = new Audio(data.voice);
-
-    audio.onplay = () => {
-      startTalkingAnimation();
-    };
-
-    audio.onended = () => {
-      stopTalkingAnimation();
-      currentState = STATE.ACTIVE;
-      face.src = "assets/idle.png";
-      lastInteractionTime = Date.now();
-    };
-
-    audio.onerror = () => {
-      stopTalkingAnimation();
-      speakText("Audio failed");
-    };
-    audio.load();
-    audio.play().catch(err => {
-      console.error("Play error:", err);
-    });
-
-  } else {
-    speakText(data.response);
-  }
-}
-function addNaturalPauses(text) {
-    return text
-      .replace(/\./g, "... ")
-      .replace(/,/g, ", ");
-}
-let selectedVoice = null;
+  let selectedVoice = null;
 let recognitionStarted = false;
 
 speechSynthesis.onvoiceschanged = () => {
@@ -407,6 +311,37 @@ function speakText(text) {
 
   speechSynthesis.speak(utter);
 }
+
+function startTalkingAnimation() {
+  stopTalkingAnimation();
+
+  talkInterval = setInterval(() => {
+    face.src = talkingFrames[talkIndex];
+    talkIndex = (talkIndex + 1) % talkingFrames.length;
+  }, 120);
+}
+
+function stopTalkingAnimation() {
+  clearInterval(talkInterval);
+  face.src = "assets/idle.png";
+}
+
+setInterval(() => {
+  if (
+    currentState === STATE.ACTIVE &&
+    Date.now() - lastInteractionTime > 30000
+  ) {
+    goIdle();
+  }
+}, 2000);
+
+function goIdle() {
+  currentState = STATE.IDLE;
+  face.src = "assets/idle.png";
+  console.log("Taesu idle mode");
+}
+
+safeStartRecognition();
 /* animation */
 function startTalkingAnimation() {
   stopTalkingAnimation();
@@ -437,4 +372,5 @@ function goIdle() {
   face.src = "assets/idle.png";
   console.log("Taeiya idle mode");
 }
-recognition.start();
+
+safeStartRecognition();
