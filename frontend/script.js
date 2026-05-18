@@ -10,18 +10,18 @@ let currentEmotion = "neutral";
 let selectedVoice = null;
 let recognitionStarted = false;
 
-speechSynthesis.onvoiceschanged = () => {
-  const voices = speechSynthesis.getVoices();
+// speechSynthesis.onvoiceschanged = () => {
+//   const voices = speechSynthesis.getVoices();
 
-  selectedVoice =
-    voices.find(v => v.name.includes("David")) ||
-    voices.find(v => v.name.includes("Mark")) ||
-    voices.find(v => v.name.includes("Male")) ||
-    voices.find(v => v.lang === "en-US") ||
-    voices[0];
+//   selectedVoice =
+//     voices.find(v => v.name.includes("David")) ||
+//     voices.find(v => v.name.includes("Mark")) ||
+//     voices.find(v => v.name.includes("Male")) ||
+//     voices.find(v => v.lang === "en-US") ||
+//     voices[0];
 
-  console.log("Using voice:", selectedVoice ? selectedVoice.name : "default");
-};
+//   console.log("Using voice:", selectedVoice ? selectedVoice.name : "default");
+// };
 
 /* state */ 
 const STATE = {
@@ -193,8 +193,6 @@ function handleUserSpeech(text) {
 async function sendMessage(text) {
   currentState = STATE.THINKING;
 }
-  let selectedVoice = null;
-let recognitionStarted = false;
 
 speechSynthesis.onvoiceschanged = () => {
   const voices = speechSynthesis.getVoices();
